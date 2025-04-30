@@ -1,16 +1,34 @@
-import SearchBar from "@/components/SearchBar"
+import { useNavigate } from "react-router-dom";
+import SearchBar from "@/components/SearchBar";
 
 const MainBanner = () => {
+  const navigate = useNavigate();
+
+  const handleChatRedirect = () => {
+   navigate('/chat')
+  };
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="grid md:grid-cols-2 gap-8 items-center">
         <div className="space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight">Find Funding Schemes with Ease</h1>
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+            Find Funding Schemes with Ease
+          </h1>
           <p className="text-lg text-gray-600">
             Explore various funding schemes and get all the information you need in one place.
           </p>
-       <SearchBar/>
+
+          <SearchBar />
+
+          <button
+            onClick={handleChatRedirect}
+            className="mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow hover:bg-blue-700 transition"
+          >
+            Try AI Chat Advisor →
+          </button>
         </div>
+
         <div className="flex justify-center">
           <div className="relative">
             <div className="absolute -z-10 w-64 h-64 rounded-full bg-lime-300 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
@@ -38,7 +56,7 @@ const MainBanner = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MainBanner
+export default MainBanner;
