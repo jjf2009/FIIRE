@@ -1,12 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import SearchBar from "@/components/SearchBar";
-
 const MainBanner = () => {
-  const navigate = useNavigate();
-
-  const handleChatRedirect = () => {
-   navigate('/chat')
-  };
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -18,15 +10,6 @@ const MainBanner = () => {
           <p className="text-lg text-gray-600">
             Explore various funding schemes and get all the information you need in one place.
           </p>
-
-          <SearchBar />
-
-          <button
-            onClick={handleChatRedirect}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow hover:bg-blue-700 transition"
-          >
-            Try AI Chat Advisor →
-          </button>
         </div>
 
         <div className="flex justify-center">
@@ -40,22 +23,13 @@ const MainBanner = () => {
                     d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,17V16H9V14H13V13H10A1,1 0 0,1 9,12V9A1,1 0 0,1 10,8H11V7H13V8H15V10H11V11H14A1,1 0 0,1 15,12V15A1,1 0 0,1 14,16H13V17H11Z"
                   />
                 </svg>
-                <div className="mt-4 space-y-2">
-                  <div className="h-2 bg-emerald-500 rounded-full w-full"></div>
-                  <div className="h-2 bg-emerald-500 rounded-full w-3/4"></div>
-                  <div className="h-2 bg-emerald-500 rounded-full w-1/2"></div>
-                  <div className="flex items-end gap-1 mt-4">
-                    <div className="h-8 w-4 bg-emerald-500 rounded-t"></div>
-                    <div className="h-12 w-4 bg-emerald-500 rounded-t"></div>
-                    <div className="h-16 w-4 bg-emerald-500 rounded-t"></div>
-                  </div>
+              
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { useEffect, useState } from 'react';
 import Loading from './components/Loading';
+import BotButton from './components/BotButton';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,7 @@ function App() {
         <Navbar />
         <main className="flex-grow">
           <Outlet />
+          <BotButton/>
         </main>
         <Footer />
       </div>

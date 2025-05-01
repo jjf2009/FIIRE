@@ -17,7 +17,7 @@ const sectors = [
   "ai",
 ];
 
-export default function SchemeSearchBar() {
+export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ export default function SchemeSearchBar() {
 
   return (
     <div ref={wrapperRef} className="relative w-full max-w-md">
-      <div className="flex">
+      <div className="flex flex-col md:flex-row items-center">
         <Input
           type="text"
           placeholder="e.g. business, education, agriculture"
@@ -83,11 +83,11 @@ export default function SchemeSearchBar() {
               handleSearch();
             }
           }}
-          className="rounded-r-none"
+          className="md:rounded-r-none w-auto md:w-full"
         />
         <Button
           onClick={handleSearch}
-          className="rounded-l-none bg-emerald-500 hover:bg-emerald-600"
+          className="rounded-l-none bg-emerald-500 hover:bg-emerald-600 w-50 md:w-25 "
         >
           Search
         </Button>

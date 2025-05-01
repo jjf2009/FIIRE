@@ -1,27 +1,37 @@
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SchemeCard from "./SchemeCard";
-import SchemeSearchBar from "./SchemeSearchBar";
-import schemeData from "../../data/Scheme"; // Make sure this is a .json or .js export
+import schemeData from "../../data/Scheme"; // Should be an array
 
 const Schemes = () => {
   const [searchParams] = useSearchParams();
   const [filteredSchemes, setFilteredSchemes] = useState([]);
 
+  function formatFundingData(data) {
+    return {
+      title: data.Program || data.Organization,
+      organization: data.Organization,
+      focusAreas: data["Focus Area"].split(",").map((f) => f.trim()),
+      support: data["Grant/Support"],
+      deadline: data.Deadline,
+      applyLink: data.Link,
+    };
+  }
+
   useEffect(() => {
     const sector = searchParams.get("sector")?.toLowerCase();
-    const grantParam = parseInt(searchParams.get("grant") || "0");
 
-    let filtered = schemeData.filter((s) => s);
+    // Format all schemes
+    const formatted = schemeData.map(formatFundingData);
+
+    let filtered = formatted;
 
     if (sector) {
-      filtered = filtered.filter((s) =>
-        s["Focus Area"]?.toLowerCase().includes(sector)
+      filtered = formatted.filter((scheme) =>
+        scheme.focusAreas.some((area) =>
+          area.toLowerCase().includes(sector)
+        )
       );
-    }
-
-    if (grantParam) {
-      filtered = filtered.filter((s) => parseInt(s["Grant/Support"] || 0) >= grantParam);
     }
 
     setFilteredSchemes(filtered);
@@ -34,12 +44,8 @@ const Schemes = () => {
     : "All Schemes";
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="p-8 rounded-xl mb-8">
-        <SchemeSearchBar allSchemes={schemeData} />
-      </div>
-
-      <h2 className="text-2xl font-bold mb-4">{categoryTitle}</h2>
+    <div className="container mx-auto py-10 px-4">
+      <h2 className="text-3xl font-semibold mb-6">{categoryTitle}</h2>
 
       {filteredSchemes.length === 0 ? (
         <div className="text-center text-gray-600 text-lg font-medium mt-8">

@@ -3,7 +3,6 @@ import App from "../App.jsx";
 import Home from "../pages/home/Home.jsx";
 import Schemes from "@/pages/Schemes/Schemes.jsx";
 import NotFound from "@/components/NotFound.jsx";
-import About from "@/components/About.jsx";
 import ChatbotPage from "@/pages/chat/ChatbotPage.jsx";
 
 const router = createBrowserRouter([
@@ -19,10 +18,6 @@ const router = createBrowserRouter([
       path: "/schemes",
         element: <Schemes/>,
      },
-     {
-      path: "/about",
-         element: <About/>,
-      },
       {
         path: "/chat",
            element: <ChatbotPage/>,
