@@ -1,10 +1,11 @@
+// File: components/SchemeSearchBar.jsx
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const categories = [
+const sectors = [
   "business",
   "education",
   "agriculture",
@@ -13,9 +14,10 @@ const categories = [
   "women",
   "startup",
   "student",
+  "ai",
 ];
 
-export default function SearchBar() {
+export default function SchemeSearchBar() {
   const [query, setQuery] = useState("");
   const [filtered, setFiltered] = useState([]);
   const navigate = useNavigate();
@@ -24,32 +26,36 @@ export default function SearchBar() {
   const handleChange = (e) => {
     const value = e.target.value;
     setQuery(value);
+
     if (value.trim() === "") {
       setFiltered([]);
     } else {
       setFiltered(
-        categories.filter((cat) =>
-          cat.toLowerCase().startsWith(value.toLowerCase())
+        sectors.filter((sector) =>
+          sector.toLowerCase().startsWith(value.toLowerCase())
         )
       );
     }
   };
 
   const handleSelect = (value) => {
+    const params = new URLSearchParams();
+    params.append("sector", value.toLowerCase());
     setQuery("");
     setFiltered([]);
-    navigate(`/schemes/${value}`);
+    navigate(`/schemes?${params.toString()}`);
   };
 
   const handleSearch = () => {
+    const params = new URLSearchParams();
     if (query.trim() !== "") {
-      navigate(`/schemes/${query.trim().toLowerCase()}`);
+      params.append("sector", query.trim().toLowerCase());
+      navigate(`/schemes?${params.toString()}`);
       setQuery("");
       setFiltered([]);
     }
   };
 
-  // 🔁 Detect outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -72,6 +78,11 @@ export default function SearchBar() {
           placeholder="e.g. business, education, agriculture"
           value={query}
           onChange={handleChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSearch();
+            }
+          }}
           className="rounded-r-none"
         />
         <Button
@@ -84,15 +95,15 @@ export default function SearchBar() {
 
       {filtered.length > 0 && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded shadow">
-          {filtered.map((cat) => (
+          {filtered.map((sector) => (
             <li
-              key={cat}
-              onClick={() => handleSelect(cat)}
+              key={sector}
+              onClick={() => handleSelect(sector)}
               className={cn(
                 "cursor-pointer px-4 py-2 hover:bg-emerald-100 text-gray-800"
               )}
             >
-              {cat}
+              {sector}
             </li>
           ))}
         </ul>

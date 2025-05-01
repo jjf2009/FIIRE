@@ -29,7 +29,7 @@ const Category = () => {
   const navigate = useNavigate();
 
   const handleClick = (category) => {
-    const route = `/schemes/${category.toLowerCase()}`;
+    const route = `/schemes?sector=${category.toLowerCase()}`;
     navigate(route);
   };
 

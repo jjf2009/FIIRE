@@ -1,15 +1,8 @@
-// File: components/SchemeSearchBar.jsx
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Slider } from "@/components/ui/slider";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const sectors = [
@@ -21,111 +14,129 @@ const sectors = [
   "women",
   "startup",
   "student",
-  "ai", // if you're supporting this as a category
+  "ai",
 ];
 
-export default function SchemeSearchBar({ allSchemes = [] }) {
-  const [query, setQuery] = useState("");
-  const [filteredSchemes, setFilteredSchemes] = useState([]);
-  const [selectedSector, setSelectedSector] = useState("");
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function SchemeSearchBar() {
+  const [sectorQuery, setSectorQuery] = useState("");
+  const [filteredSectors, setFilteredSectors] = useState([]);
+  const [grant, setGrant] = useState([0]);
   const wrapperRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Detect category from the URL if it's like /schemes/:category
-  useEffect(() => {
-    const pathParts = location.pathname.split("/");
-    if (pathParts[1] === "schemes" && pathParts[2] && !location.search) {
-      const maybeSector = pathParts[2].toLowerCase();
-      if (sectors.includes(maybeSector)) {
-        setSelectedSector(maybeSector);
-      }
-    }
-  }, [location.pathname, location.search]);
-
-  const handleSchemeChange = (e) => {
+  const handleSectorChange = (e) => {
     const value = e.target.value;
-    setQuery(value);
+    setSectorQuery(value);
     if (value.trim() === "") {
-      setFilteredSchemes([]);
+      setFilteredSectors([]);
     } else {
-      setFilteredSchemes(
-        allSchemes.filter((scheme) =>
-          scheme.name.toLowerCase().includes(value.toLowerCase())
+      setFilteredSectors(
+        sectors.filter((s) =>
+          s.toLowerCase().startsWith(value.toLowerCase())
         )
       );
     }
   };
 
-  const handleSelectScheme = (value) => {
-    setQuery(value);
-    setFilteredSchemes([]);
+  const handleSelectSector = (sector) => {
+    setSectorQuery(sector);
+    setFilteredSectors([]);
   };
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (query.trim()) params.append("name", query.trim());
-    if (selectedSector) params.append("sector", selectedSector);
+    if (sectorQuery.trim()) {
+      params.append("sector", sectorQuery.trim().toLowerCase());
+    }
+    if (grant[0] > 0) {
+      params.append("grant", grant[0]);
+    }
     navigate(`/schemes?${params.toString()}`);
   };
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setFilteredSchemes([]);
+    const handleClickOutside = (event) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target)
+      ) {
+        setFilteredSectors([]);
       }
-    }
-
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
     <div
       ref={wrapperRef}
-      className="w-full flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0"
+      className="w-full flex flex-col md:flex-row items-center gap-3 md:gap-4"
     >
-      <div className="relative w-full">
+      {/* Sector Input with suggestions */}
+      <div className="relative w-full md:max-w-xs">
         <Input
           type="text"
-          placeholder="Search by scheme name..."
-          value={query}
-          onChange={handleSchemeChange}
+          placeholder="Enter sector"
+          value={sectorQuery}
+          onChange={handleSectorChange}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
-        {filteredSchemes.length > 0 && (
+        {filteredSectors.length > 0 && (
           <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded shadow">
-            {filteredSchemes.map((scheme, index) => (
+            {filteredSectors.map((sector) => (
               <li
-                key={index}
-                onClick={() => handleSelectScheme(scheme.name)}
-                className={cn("cursor-pointer px-4 py-2 hover:bg-emerald-100")}
+                key={sector}
+                onClick={() => handleSelectSector(sector)}
+                className={cn(
+                  "cursor-pointer px-4 py-2 hover:bg-emerald-100 text-gray-800"
+                )}
               >
-                {scheme.name}
+                {sector}
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <Select value={selectedSector} onValueChange={setSelectedSector}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select sector" />
-        </SelectTrigger>
-        <SelectContent>
-          {sectors.map((sector, idx) => (
-            <SelectItem key={idx} value={sector}>
-              {sector.charAt(0).toUpperCase() + sector.slice(1)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* Grant Slider */}
+      <div className="flex flex-col md:flex-row items-center gap-4 md:gap-3 w-full md:w-fit">
+        <label className="text-sm text-gray-700 whitespace-nowrap">
+          Max ₹{grant[0].toLocaleString()}
+        </label>
+        <div className="w-full md:w-64">
+          <Slider
+            value={grant}
+            min={1000}
+            max={1000000}
+            step={1000}
+            onValueChange={(value) => setGrant(value)}
+          />
+        </div>
+      </div>
 
-      <Button
-        className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600"
-        onClick={handleSearch}
-      >
-        Search
-      </Button>
+      {/* Search Button */}
+          {/* Search and Reset Buttons */}
+          <div className="flex gap-2 w-full md:w-auto">
+        <Button
+          onClick={handleSearch}
+          className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600"
+        >
+          Search
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setSectorQuery("");
+            setGrant([1000]);
+            navigate("/schemes");
+          }}
+          className="w-full md:w-auto"
+        >
+          Reset
+        </Button>
+      </div>
+
     </div>
   );
 }

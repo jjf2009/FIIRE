@@ -17,10 +17,6 @@ const router = createBrowserRouter([
       },
      {
       path: "/schemes",
-        element: <Schemes />,
-     },
-     {
-     path: "/schemes/:id",
         element: <Schemes/>,
      },
      {
