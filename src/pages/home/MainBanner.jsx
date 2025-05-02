@@ -1,5 +1,6 @@
-const MainBanner = () => {
+import { Link } from "react-router-dom";
 
+const MainBanner = () => {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="grid md:grid-cols-2 gap-8 items-center">
@@ -10,6 +11,13 @@ const MainBanner = () => {
           <p className="text-lg text-gray-600">
             Explore various funding schemes and get all the information you need in one place.
           </p>
+
+          {/* CTA Button */}
+          <Link to="/schemes">
+            <button className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all shadow-md">
+              Explore Schemes
+            </button>
+          </Link>
         </div>
 
         <div className="flex justify-center">
@@ -23,13 +31,12 @@ const MainBanner = () => {
                     d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,17V16H9V14H13V13H10A1,1 0 0,1 9,12V9A1,1 0 0,1 10,8H11V7H13V8H15V10H11V11H14A1,1 0 0,1 15,12V15A1,1 0 0,1 14,16H13V17H11Z"
                   />
                 </svg>
-              
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
