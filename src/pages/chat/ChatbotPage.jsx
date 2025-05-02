@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+// import StartupBriefInput from "./StartupBriefInput";
 import { Card, CardContent,CardHeader,CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, Leaf, GraduationCap, Sparkles } from 'lucide-react';
@@ -11,7 +11,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
 
 const boilerplateText = `[Company/Product Name] is developing a [hardware/software] solution in the [industry] 
 sector. We are a team of [number] founders who are [graduate/working professionals/
@@ -70,21 +69,12 @@ const ChatbotPage = () => {
       </div>
 
       <div className="space-y-6">
-        <div>
-          <label htmlFor="startup-brief" className="block text-sm font-medium mb-2">
-            Enter Startup Brief:
-          </label>
-          <Textarea
-            id="startup-brief"
-            placeholder="Describe your startup's mission, product/service, target market, and unique value proposition..."
-            className="min-h-[140px] resize-y"
-            value={startupBrief}
-            onChange={(e) => setStartupBrief(e.target.value)}
-          />
-          {error && (
-            <p className="text-red-600 text-sm mt-2">{error}</p>
-          )}
-        </div>
+      {/* <StartupBriefInput
+  value={startupBrief}
+  onChange={setStartupBrief}
+  error={error}
+/> */}
+
 
         <div>
           <label className="block text-sm font-medium mb-2">

@@ -1,41 +1,42 @@
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SchemeCard from "./SchemeCard";
-import schemeData from "../../data/Scheme"; // Should be an array
 import SearchBar from "@/components/SearchBar";
 
 const Schemes = () => {
   const [searchParams] = useSearchParams();
   const [filteredSchemes, setFilteredSchemes] = useState([]);
-
-  function formatFundingData(data) {
-    return {
-      title: data.Program || data.Organization,
-      organization: data.Organization,
-      focusAreas: data["Focus Area"].split(",").map((f) => f.trim()),
-      support: data["Grant/Support"],
-      deadline: data.Deadline,
-      applyLink: data.Link,
-    };
-  }
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const sector = searchParams.get("sector")?.toLowerCase();
+    const fetchSchemes = async () => {
+      // const sheetURL = 'https://script.google.com/macros/s/AKfycbyuXbixSl4nOE_QAOOyKGZ0oJt3ghptZtcdMz8xyo2U5pytwNNU45fWrT5BCp7CJbN-ZA/exec';
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbyuXbixSl4nOE_QAOOyKGZ0oJt3ghptZtcdMz8xyo2U5pytwNNU45fWrT5BCp7CJbN-ZA/exec");
+        const data = await res.json(); // ✅ Now it works
+        console.log("Data",data)
 
-    // Format all schemes
-    const formatted = schemeData.map(formatFundingData);
+        const sector = searchParams.get("sector")?.toLowerCase();
+        let filtered = data.schemes;
+        console.log(filtered)
 
-    let filtered = formatted;
+        if (sector) {
+          filtered = filtered.filter((scheme) =>
+            scheme.focusAreas.some((area) =>
+              area.toLowerCase().includes(sector)
+            )
+          );
+        }
+      
+        setFilteredSchemes(filtered);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch schemes:", error);
+        setLoading(false);
+      }
+    };
 
-    if (sector) {
-      filtered = formatted.filter((scheme) =>
-        scheme.focusAreas.some((area) =>
-          area.toLowerCase().includes(sector)
-        )
-      );
-    }
-
-    setFilteredSchemes(filtered);
+    fetchSchemes();
   }, [searchParams]);
 
   const categoryTitle = searchParams.get("sector")
@@ -46,12 +47,14 @@ const Schemes = () => {
 
   return (
     <div className="container mx-auto py-10 px-4">
-
       <h2 className="text-3xl font-semibold mb-6">{categoryTitle}</h2>
       <span className="md:hidden m-3">
-        <SearchBar/>
+        <SearchBar />
       </span>
-      {filteredSchemes.length === 0 ? (
+
+      {loading ? (
+        <div className="text-center text-gray-500 font-medium mt-8">Loading...</div>
+      ) : filteredSchemes.length === 0 ? (
         <div className="text-center text-gray-600 text-lg font-medium mt-8">
           ❌ No {categoryTitle} schemes found matching your criteria.
         </div>
