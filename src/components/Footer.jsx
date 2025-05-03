@@ -25,8 +25,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-600 hover:text-emerald-500">
-                  About Us
+                <Link to="/categories" className="text-gray-600 hover:text-emerald-500">
+                  Categories
                 </Link>
               </li>
               <li>
@@ -35,13 +35,6 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-lg mb-4">Contact</h3>
-            <address className="not-italic text-gray-600">
-              <p>Email: info@fundfind.com</p>
-              <p>Phone: +1 (555) 123-4567</p>
-            </address>
           </div>
         </div>
         <div className="border-t mt-8 pt-8 text-center text-gray-600">
