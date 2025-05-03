@@ -11,9 +11,9 @@ const Footer = () => {
               Helping you discover and access the right funding opportunities for your needs.
             </p>
           </div>
-          <div>
-            <h3 className="font-bold text-lg mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+          <div className="md:col-span-2 ">
+            <h3 className="font-bold text-lg mb-5">Quick Links</h3>
+            <ul className="flex flex-row flex-wrap gap-6 ml-4">
               <li>
                 <Link to="/" className="text-gray-600 hover:text-emerald-500">
                   Home
@@ -27,6 +27,11 @@ const Footer = () => {
               <li>
                 <Link to="/categories" className="text-gray-600 hover:text-emerald-500">
                   Categories
+                </Link>
+              </li>
+              <li>
+                <Link to="/chat" className="text-gray-600 hover:text-emerald-500">
+                  Bot
                 </Link>
               </li>
             </ul>

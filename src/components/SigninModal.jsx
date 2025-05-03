@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Cookies from 'js-cookie';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -19,6 +20,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,8 +119,12 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
   <Button 
     variant="outline" 
     type="button" 
-    onClick={onClose} 
+    onClick={() => {
+      onClose();
+      navigate('/');
+    }} 
     disabled={isSubmitting}
+    
   >
     Cancel
   </Button>
