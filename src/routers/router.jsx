@@ -5,6 +5,7 @@ import Schemes from "@/pages/Schemes/Schemes.jsx";
 import NotFound from "@/components/NotFound.jsx";
 import ChatbotPage from "@/pages/chat/ChatbotPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx"
+import SectorPage from "@/pages/SectorPage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
       {
         path: "/chat",
            element:<ProtectedRoute><ChatbotPage/></ProtectedRoute> ,
+      },
+      {
+        path: "/categories",
+           element:<SectorPage/>,
       },
      {
       path:"*",

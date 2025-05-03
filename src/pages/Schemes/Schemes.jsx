@@ -1,41 +1,56 @@
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import SchemeCard from "./SchemeCard";
-import SearchBar from "@/components/SearchBar";
+import SchemeCard from "./SchemeCard"; // Should be an array
+import Papa from "papaparse";
+
 
 const Schemes = () => {
-  const [searchParams] = useSearchParams();
-  const [filteredSchemes, setFilteredSchemes] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+const [searchParams] = useSearchParams();
+const [filteredSchemes, setFilteredSchemes] = useState([]);
+const [loading, setLoading] = useState(true);
+  function formatFundingData(data) {
+    return {
+      title: data["Program"],
+      organization: data["Organization"],
+      focusAreas:data["Focus_Area"] ? data["Focus_Area"].replace(/^\s*"(.*)"\s*$/, "$1").trim().split(",").map((f) => f.trim()): [],
+      support: data["Grant/Support"],
+      deadline: data["Deadline"],
+      applyLink:data["Link"],
+    };
+  }
   useEffect(() => {
     const fetchSchemes = async () => {
-      // const sheetURL = 'https://script.google.com/macros/s/AKfycbyuXbixSl4nOE_QAOOyKGZ0oJt3ghptZtcdMz8xyo2U5pytwNNU45fWrT5BCp7CJbN-ZA/exec';
+      const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1kiCFeQNcNGhn3MMlsKdg8EhDi4Qbamuy2NKPentn37a3L85gvJkABfAnlPYi-8IdVuEg7Pbi58-F/pub?output=csv";
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbyuXbixSl4nOE_QAOOyKGZ0oJt3ghptZtcdMz8xyo2U5pytwNNU45fWrT5BCp7CJbN-ZA/exec");
-        const data = await res.json(); // ✅ Now it works
-        console.log("Data",data)
+        const res = await fetch(csvUrl);
+        const text = await res.text();
+  
+        const parsed = Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+        });
 
         const sector = searchParams.get("sector")?.toLowerCase();
-        let filtered = data.schemes;
+        // Format all schemes
+        const formatted =parsed.data.map(formatFundingData);
+        let filtered = formatted; 
         console.log(filtered)
-
         if (sector) {
-          filtered = filtered.filter((scheme) =>
+          filtered = formatted.filter((scheme) =>
             scheme.focusAreas.some((area) =>
-              area.toLowerCase().includes(sector)
+            area.toLowerCase().includes(sector)
             )
           );
         }
-      
+  
+        
         setFilteredSchemes(filtered);
         setLoading(false);
       } catch (error) {
-        console.error("Failed to fetch schemes:", error);
+        console.error("Failed to fetch or parse CSV data:", error);
         setLoading(false);
       }
     };
-
     fetchSchemes();
   }, [searchParams]);
 
@@ -45,27 +60,31 @@ const Schemes = () => {
         .slice(1)} Schemes`
     : "All Schemes";
 
-  return (
-    <div className="container mx-auto py-10 px-4">
-      <h2 className="text-3xl font-semibold mb-6">{categoryTitle}</h2>
-      <span className="md:hidden m-3">
-        <SearchBar />
-      </span>
 
-      {loading ? (
-        <div className="text-center text-gray-500 font-medium mt-8">Loading...</div>
-      ) : filteredSchemes.length === 0 ? (
-        <div className="text-center text-gray-600 text-lg font-medium mt-8">
-          ❌ No {categoryTitle} schemes found matching your criteria.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSchemes.map((scheme, idx) => (
-            <SchemeCard key={idx} scheme={scheme} />
-          ))}
-        </div>
-      )}
-    </div>
+  return (
+      <div className="container mx-auto py-10 px-4">
+        {loading ? (
+          <div className="text-center text-gray-500 text-lg font-medium mt-8 animate-pulse">
+            🔄 Fetching latest schemes for you...
+          </div>
+        ) : (
+          <>
+            <h2 className="text-3xl font-semibold mb-6">{categoryTitle}</h2>
+            <span className="md:hidden m-3"></span>
+            {filteredSchemes.length === 0 ? (
+              <div className="text-center text-gray-600 text-lg font-medium mt-8">
+                ❌ No {categoryTitle} schemes found matching your criteria.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredSchemes.map((scheme, idx) => (
+                  <SchemeCard key={idx} scheme={scheme} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
   );
 };
 
