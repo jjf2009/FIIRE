@@ -60,7 +60,6 @@ const Navbar = () => {
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/" className="text-sm font-medium">Home</Link>
           <Link to="/schemes" className="text-sm font-medium">Schemes</Link>
-          <Button variant="outline" className="rounded-full">Sign in</Button>
         </nav>
 
       
