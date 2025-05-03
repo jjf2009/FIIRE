@@ -1,66 +1,53 @@
-// components/StartupBriefInput.tsx
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Eligibility criteria for the four tracks
-// const tracks = {
-//   "NIDHI Prayas": `Eligibility: Indian entrepreneurs with a technology-based startup at the proof-of-concept stage. No age limit. Must have a hardware product. Must have a working prototype. Incubated at DST recognized incubator.`,
-//   "NIDHI EIR": `Eligibility: Indian citizens, 18+ years, with a tech-based idea/startup. Must be full-time. Idea should be impactful and incubated.`,
-//   "NIDHI SSS": `Eligibility: Tech startups < 2 years old. 51% Indian-owned. Registered at recognized incubator. Must have a business plan and technical competence.`,
-//   "Startup India Seed Fund": `Eligibility: DPIIT-registered, < 2 years old, scalable, tech-driven. Shouldn’t have received ₹10L+ from other govt schemes. Incubated.`,
-// };
+const genAi = new GoogleGenerativeAI('');
 
-// const groq = new Groq({
-//   apiKey:' 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',
-// });
+const tracks = `
+1. Startup India Seed Fund Scheme (SISFS): For early-stage startups with MVP, product development needs, or initial market entry.
+2. MeitY TIDE 2.0: For tech startups (especially hardware+software) in emerging technologies like IoT, AI, Blockchain, etc.
+3. NIDHI-PRAYAS: For hardware startups that need prototyping support.
+4. DST NIDHI-EIR: For individual founders needing stipend support while pursuing full-time startup development.
+`;
 
 const StartupBriefInput = ({ value, onChange, error }) => {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
 
-//   const generatePrompt = (brief) => {
-//     return `
-// You are an AI startup advisor. Your task is to analyze the startup's brief and rank the tracks from highest to lowest likelihood of eligibility.
-// Understand what the startup is doing and consider all eligibility criteria such as hardware/software distinctions.
+  const handleSubmit = async () => {
+    if (!value.trim()) return;
 
-// Here are the 4 tracks and their eligibility criteria:
-// ${Object.entries(tracks)
-//   .map(([track, criteria]) => `${track}: ${criteria}`)
-//   .join("\n\n")}
+    setLoading(true);
+    setResult("");
 
-// Startup Brief: "${brief}"
+    const prompt = `
+You are an AI startup advisor. Your task is to analyze the startup's brief and rank the tracks from highest to lowest likelihood of eligibility.
+Deeply understand what the startup is doing and all of its nuances and make sure you take into account all the eligibility criteria such as hardware, software, etc.
 
-// Return a numbered ranked list of track names only. If no track fits, return "None".
-// Example format:
-// 1. Track A
-// 2. Track B
-// 3. Track C
-// 4. Track D
-// `;
-//   };
+Here are the 4 tracks and their eligibility criteria:
+${tracks}
 
-//   const handleSubmit = async () => {
-//     if (!value.trim()) return;
+Startup Brief: "${value}"
 
-//     setLoading(true);
-//     setResult(null);
-//     try {
-//       const response = await groq.chat.completions.create({
-//         model: "mixtral-8x7b-32768",
-//         messages: [{ role: "user", content: generatePrompt(value) }],
-//       });
+Based on the brief, return only a ranked list of track names from highest to lowest likelihood. Number them. If no track is a fit, return "None".
+Reply in a clean format, with only the track names, one per line, no extra commentary.
+`;
 
-//       const reply = response.choices[0].message.content.trim();
-//       setResult(reply);
-//     } catch (err) {
-//       console.error("Error generating response:", err);
-//       setResult("An error occurred while analyzing.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+    try {
+      const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      setResult(text.trim());
+    } catch (error) {
+      console.error("Error Calling Gemini: ", error);
+      setResult("An error occurred: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
