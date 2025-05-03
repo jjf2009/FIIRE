@@ -29,11 +29,6 @@ const Footer = () => {
                   Categories
                 </Link>
               </li>
-              <li>
-                <Link to="/contact" className="text-gray-600 hover:text-emerald-500">
-                  Contact
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
