@@ -20,7 +20,7 @@ import {
   TestTube2, UserPlus, BrainCog
 } from "lucide-react";
 
-export const sectors = [
+const sectors = [
   {
     icon: <Cpu className="h-10 w-10 text-emerald-500" />,
     title: "Hardware",
