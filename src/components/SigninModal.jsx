@@ -75,7 +75,10 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={onClose} 
+            onClick={() => {
+              onClose();
+              navigate('/');
+            }} 
             className="h-8 w-8 rounded-full"
             aria-label="Close"
           >
@@ -111,18 +114,24 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              id="subscribe"
-              type="checkbox"
-              checked={subscribe}
-              onChange={(e) => setSubscribe(e.target.checked)}
-              className="accent-emerald-500 h-4 w-4"
-            />
-            <Label htmlFor="subscribe" className="text-sm text-gray-700">
-              Subscribe to our newsletter
-            </Label>
-          </div>
+          <div className="space-y-2">
+  <h4 className="text-sm font-medium text-gray-800">
+    Get the latest news and funding info from our weekly newsletter
+  </h4>
+  <div className="flex items-center space-x-2">
+    <input
+      id="subscribe"
+      type="checkbox"
+      checked={subscribe}
+      onChange={(e) => setSubscribe(e.target.checked)}
+      className="accent-emerald-500 h-4 w-4"
+    />
+    <Label htmlFor="subscribe" className="text-sm text-gray-700">
+      Yes, sign me up
+    </Label>
+  </div>
+</div>
+
 
           {error && (
             <div className="text-red-500 text-sm font-medium">{error}</div>

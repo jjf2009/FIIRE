@@ -42,6 +42,7 @@ const Schemes = () => {
         });
 
         const sector = searchParams.get("sector")?.toLowerCase();
+        // console.log(sector)
         const grant = searchParams.get("grant")?.toLowerCase();
 
         const formatted = parsed.data.map(formatFundingData);
@@ -49,11 +50,14 @@ const Schemes = () => {
         let filtered = formatted;
 
         if (sector) {
-          filtered = filtered.filter((scheme) =>
-            scheme.focusAreas.some((area) => area.toLowerCase().includes(sector))
-          );
-        }
+         const regex = new RegExp(`\\b${sector}`, "i");
 
+            filtered = filtered.filter((scheme) =>
+                scheme.focusAreas.some((area) => regex.test(area))
+            );
+
+        }
+        console.log(filtered)
         if (grant && grant !== "all") {
           filtered = filtered.filter((scheme) =>
             scheme.support?.toLowerCase().includes(grant)
