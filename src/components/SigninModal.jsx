@@ -18,6 +18,7 @@ import { X } from "lucide-react";
 const SignInModal = ({ isOpen, onClose, onSignIn }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [subscribe, setSubscribe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate()
@@ -25,26 +26,28 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
-  
+
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address.');
       return;
     }
-  
+
     setIsSubmitting(true);
-    
+
     const sheetURL = 'https://script.google.com/macros/s/AKfycbyuXbixSl4nOE_QAOOyKGZ0oJt3ghptZtcdMz8xyo2U5pytwNNU45fWrT5BCp7CJbN-ZA/exec';
     const body = `Name=${encodeURIComponent(name)}&Email=${encodeURIComponent(email)}`;
-  
+
     try {
-      await fetch(sheetURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
-      });
-  
+      if (subscribe) {
+        await fetch(sheetURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        });
+      }
+
       Cookies.set('user', JSON.stringify({ name, email }), { expires: 7 });
       onSignIn({ name, email });
       onClose();
@@ -55,7 +58,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <AlertDialogTrigger asChild>
@@ -79,7 +82,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
             <X size={16} />
           </Button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">Name</Label>
@@ -93,7 +96,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <Input
@@ -107,28 +110,40 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
               required
             />
           </div>
-          
+
+          <div className="flex items-center space-x-2">
+            <input
+              id="subscribe"
+              type="checkbox"
+              checked={subscribe}
+              onChange={(e) => setSubscribe(e.target.checked)}
+              className="accent-emerald-500 h-4 w-4"
+            />
+            <Label htmlFor="subscribe" className="text-sm text-gray-700">
+              Subscribe to our newsletter
+            </Label>
+          </div>
+
           {error && (
             <div className="text-red-500 text-sm font-medium">{error}</div>
           )}
-          
+
           <AlertDialogFooter className="pt-4">
-  <Button type="submit" disabled={isSubmitting}>
-    {isSubmitting ? 'Submitting...' : 'Sign In'}
-  </Button>
-  <Button 
-    variant="outline" 
-    type="button" 
-    onClick={() => {
-      onClose();
-      navigate('/');
-    }} 
-    disabled={isSubmitting}
-    
-  >
-    Cancel
-  </Button>
-</AlertDialogFooter>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Sign In'}
+            </Button>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => {
+                onClose();
+                navigate('/');
+              }} 
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          </AlertDialogFooter>
 
         </form>
       </AlertDialogContent>
