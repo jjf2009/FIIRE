@@ -1,149 +1,382 @@
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import SchemeCard from "./SchemeCard";
+import { useState, useEffect, useCallback, useMemo, Suspense, lazy } from "react";
 import Papa from "papaparse";
+import { Skeleton } from "@/components/ui/skeleton";
+// import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertCircle, Filter, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { motion } from "framer-motion";
+import useDebounce from "@/hooks/useDebounce";
 
-const uniqueGrantOptions = [
-  "Up to $20,000", "Up to $50,000", "Up to $80,000", "Up to $100,000", "Up to $120,000",
-  "Up to $150,000", "Up to $250,000", "Up to $380,000", "Up to $500,000", "Varies"
-];
+// Lazy load SchemeCard for better initial loading performance
+const SchemeCard = lazy(() => import("./SchemeCard"));
 
+// Constants
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1kiCFeQNcNGhn3MMlsKdg8EhDi4Qbamuy2NKPentn37a3L85gvJkABfAnlPYi-8IdVuEg7Pbi58-F/pub?output=csv";
+
+/**
+ * Schemes Component - Displays and filters funding schemes
+ * 
+ * This component fetches scheme data from a CSV, processes it,
+ * and provides filtering capabilities through URL parameters.
+ */
 const Schemes = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredSchemes, setFilteredSchemes] = useState([]);
+  const [allSchemes, setAllSchemes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sectorFilter, setSectorFilter] = useState("");
-  const [grantFilter, setGrantFilter] = useState("");
-
-  function formatFundingData(data) {
+  const [error, setError] = useState(null);
+  
+  // Get filter values from URL params
+  const categoryParam = searchParams.get("sector") || "";
+  const fundingTypeParam = searchParams.get("fundingType") || "";
+  const statusParam = searchParams.get("status") || "";
+  
+  // Local state for input fields
+  const [categoryFilter, setCategoryFilter] = useState(categoryParam);
+  const [fundingTypeFilter, setFundingTypeFilter] = useState(fundingTypeParam);
+  const [statusFilter, setStatusFilter] = useState(statusParam);
+  
+  // Debounce filter inputs to prevent excessive URL updates
+  const debouncedCategoryFilter = useDebounce(categoryFilter, 500);
+  const debouncedFundingTypeFilter = useDebounce(fundingTypeFilter, 500);
+  const debouncedStatusFilter = useDebounce(statusFilter, 500);
+  
+  // Process CSV data into usable format
+  const formatFundingData = useCallback((data) => {
+    const deadlineDate = data["Deadline"] ? new Date(data["Deadline"]) : null;
+    const currentDate = new Date();
+  
+    let status = "Unknown";
+    if (deadlineDate) {
+      status = deadlineDate < currentDate ? "Closed" : "Open";   
+    }
+  
     return {
-      title: data["Program"],
-      organization: data["Organization"],
+      title: data["Program"] || "Untitled Program",
+      organization: data["Organization"] || "Unknown Organization",
       focusAreas: data["Focus_Area"]
-        ? data["Focus_Area"].replace(/^\s*"(.*)"\s*$/, "$1").trim().split(",").map((f) => f.trim())
+        ? data["Focus_Area"].replace(/^[\s\"\']*(.*?)[\s\"\']*$/, "$1").split(",").map((f) => f.trim())
         : [],
-      support: data["Grant/Support"],
-      deadline: data["Deadline"],
-      applyLink: data["Link"],
+      support: data["Grant/Support"] || "Not specified",
+      deadline: data["Deadline"] || null,
+      applyLink: data["Link"] || "#",
+      fundingType: data["Funding Type"] || "Not specified",
+      status,
     };
-  }
+  }, []);
+  ;
+  
 
+  // Fetch schemes data
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
     const fetchSchemes = async () => {
-      const csvUrl =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1kiCFeQNcNGhn3MMlsKdg8EhDi4Qbamuy2NKPentn37a3L85gvJkABfAnlPYi-8IdVuEg7Pbi58-F/pub?output=csv";
+      setLoading(true);
+      setError(null);
+      
       try {
-        const res = await fetch(csvUrl);
+        const res = await fetch(CSV_URL, { signal });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch data: ${res.status} ${res.statusText}`);
+        }
+        
         const text = await res.text();
 
         const parsed = Papa.parse(text, {
           header: true,
           skipEmptyLines: true,
+          dynamicTyping: true,
+          transformHeader: (header) => header.trim()
         });
 
-        const sector = searchParams.get("sector")?.toLowerCase();
-        // console.log(sector)
-        const grant = searchParams.get("grant")?.toLowerCase();
-
-        const formatted = parsed.data.map(formatFundingData);
-
-        let filtered = formatted;
-
-        if (sector) {
-         const regex = new RegExp(`\\b${sector}`, "i");
-
-            filtered = filtered.filter((scheme) =>
-                scheme.focusAreas.some((area) => regex.test(area))
-            );
-
+        if (parsed.errors.length > 0) {
+          console.warn("CSV parsing had errors:", parsed.errors);
         }
-        console.log(filtered)
-        if (grant && grant !== "all") {
-          filtered = filtered.filter((scheme) =>
-            scheme.support?.toLowerCase().includes(grant)
-          );
-        }
-
-        setFilteredSchemes(filtered);
-        setLoading(false);
+         
+        const formatted = parsed.data
+          .map(formatFundingData)
+          .sort((a, b) => {
+            // Sort by status (open first) and then by deadline (soonest first)
+            if (a.status.toLowerCase() === "open" && b.status.toLowerCase() !== "open") return -1;
+            if (a.status.toLowerCase() !== "open" && b.status.toLowerCase() === "open") return 1;
+            
+            // If both have the same status and have valid deadlines, sort by deadline
+            if (a.deadline && b.deadline) {
+              return new Date(a.deadline) - new Date(b.deadline);
+            }
+          
+            return 0;
+          });
+          // console.log(formatted)
+        setAllSchemes(formatted);
       } catch (error) {
-        console.error("Failed to fetch or parse CSV data:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Failed to fetch or parse CSV data:", error);
+          setError("Failed to load funding schemes. Please try again later.");
+        }
+      } finally {
         setLoading(false);
       }
     };
 
     fetchSchemes();
-  }, [searchParams]);
+    
+    // Cleanup function to abort fetch if component unmounts
+    return () => controller.abort();
+  }, [formatFundingData]);
 
-  const handleFilterChange = (key, value) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set(key, value);
-    setSearchParams(newParams);
+  // Update URL when debounced filters change
+  useEffect(() => {
+    const newParams = new URLSearchParams();
+    
+    if (debouncedCategoryFilter) newParams.set("sector", debouncedCategoryFilter);
+    if (debouncedFundingTypeFilter) newParams.set("fundingType", debouncedFundingTypeFilter);
+    if (debouncedStatusFilter) newParams.set("status", debouncedStatusFilter);
+    
+    setSearchParams(newParams, { replace: true });
+  }, [debouncedCategoryFilter, debouncedFundingTypeFilter, debouncedStatusFilter, setSearchParams]);
+
+  // Generate list of unique categories, funding types, and statuses for dropdown options
+  const { uniqueCategories, uniqueFundingTypes, uniqueStatuses } = useMemo(() => {
+    if (!allSchemes.length) {
+      return { uniqueCategories: [], uniqueFundingTypes: [], uniqueStatuses: [] };
+    }
+    
+    return {
+      uniqueCategories: [...new Set(allSchemes.flatMap(scheme => scheme.focusAreas))].filter(Boolean).sort(),
+      uniqueFundingTypes: [...new Set(allSchemes.map(scheme => scheme.fundingType))].filter(Boolean).sort(),
+      uniqueStatuses: [...new Set(allSchemes.map(scheme => scheme.status))].filter(Boolean).sort()
+    };
+  }, [allSchemes]);
+
+  // Filter schemes based on current URL parameters
+  const filteredSchemes = useMemo(() => {
+    if (!allSchemes.length) return [];
+    
+    return allSchemes.filter(scheme => {
+      const matchesCategory = categoryParam === "all" || 
+      scheme.focusAreas.some(area => area.toLowerCase().includes(categoryParam.toLowerCase()));
+
+      const matchesFundingType = fundingTypeParam === "all" || 
+        scheme.fundingType?.toLowerCase().includes(fundingTypeParam.toLowerCase());
+      
+      const matchesStatus = statusParam === "all" || 
+        scheme.status?.toLowerCase().includes(statusParam.toLowerCase());
+      
+      return matchesCategory && matchesFundingType && matchesStatus;
+    });
+  }, [allSchemes, categoryParam, fundingTypeParam, statusParam]);
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setCategoryFilter("");
+    setFundingTypeFilter("");
+    setStatusFilter("");
+    setSearchParams({});
   };
 
-  const categoryTitle = searchParams.get("sector")
-    ? `${searchParams.get("sector").charAt(0).toUpperCase()}${searchParams.get("sector").slice(1)} Schemes`
-    : "All Schemes";
+  // Generate title based on current category filter
+  const pageTitle = useMemo(() => {
+    if (categoryParam) {
+      return `${categoryParam.charAt(0).toUpperCase()}${categoryParam.slice(1)} Schemes`;
+    }
+    return "All Funding Schemes";
+  }, [categoryParam]);
 
-  return (
-    <div className="container mx-auto py-10 px-4">
-      <div className="mb-6 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        <div className="flex flex-col gap-2 w-full md:w-auto">
-          <label className="text-sm font-medium">Filter by Sector</label>
-          <input
-            type="text"
-            placeholder="Enter sector keyword"
-            value={sectorFilter}
-            onChange={(e) => {
-              setSectorFilter(e.target.value);
-              handleFilterChange("sector", e.target.value);
-            }}
-            className="border rounded px-3 py-2 w-full md:w-64"
-          />
+  // Filter stats
+  const totalSchemes = allSchemes.length;
+  const filteredCount = filteredSchemes.length;
+  const openSchemesCount = filteredSchemes.filter(s => s.status?.toLowerCase() === "open").length;
+
+  // Render skeletons while loading
+  const renderSkeletons = () => {
+    return Array(6).fill(0).map((_, idx) => (
+      <div key={idx} className="bg-white rounded-lg border border-gray-200 overflow-hidden h-96">
+        <div className="h-2 bg-gray-200 w-full"></div>
+        <div className="p-6">
+          <Skeleton className="h-8 w-3/4 mb-4" />
+          <Skeleton className="h-4 w-1/2 mb-6" />
+          <div className="flex gap-2 mb-6">
+            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-6 w-16" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         </div>
-
-        <div className="flex flex-col gap-2 w-full md:w-auto">
-          <label className="text-sm font-medium">Filter by Grant</label>
-          <select
-            value={grantFilter}
-            onChange={(e) => {
-              setGrantFilter(e.target.value);
-              handleFilterChange("grant", e.target.value);
-            }}
-            className="border rounded px-3 py-2 w-full md:w-64"
-          >
-            <option value="">All</option>
-            {uniqueGrantOptions.map((option, i) => (
-              <option key={i} value={option.toLowerCase()}>
-                {option}
-              </option>
-            ))}
-          </select>
+        <div className="p-6 bg-gray-50">
+          <Skeleton className="h-10 w-full" />
         </div>
       </div>
-
-      {loading ? (
-        <div className="text-center text-gray-500 text-lg font-medium mt-8 animate-pulse">
-          🔄 Fetching latest schemes for you...
+    ));
+  };
+  const splitIntoChunks = (arr, chunkSize) => {
+    const result = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+      result.push(arr.slice(i, i + chunkSize));
+    }
+    return result;
+  };
+  
+  return (
+    <div className="container mx-auto py-10 px-4">
+      {/* Filters Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-medium flex items-center gap-2">
+            <Filter size={18} className="text-gray-500" />
+            Filter Schemes
+          </h3>
+          {(categoryFilter || fundingTypeFilter || statusFilter) && (
+            <button 
+              onClick={handleResetFilters}
+              className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1"
+            >
+              <X size={14} />
+              Clear Filters
+            </button>
+          )}
         </div>
-      ) : (
-        <>
-          <h2 className="text-3xl font-semibold mb-6">{categoryTitle}</h2>
-          {filteredSchemes.length === 0 ? (
-            <div className="text-center text-gray-600 text-lg font-medium mt-8">
-              ❌ No {categoryTitle} schemes found matching your criteria.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredSchemes.map((scheme, idx) => (
-                <SchemeCard key={idx} scheme={scheme} />
-              ))}
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Category Filter */}
+  {/* Category Filter */}
+  <div className="space-y-2">
+    <Label htmlFor="category-filter">Category</Label>
+    <Select 
+      value={categoryFilter} 
+      onValueChange={setCategoryFilter}
+    >
+      <SelectTrigger id="category-filter">
+        <SelectValue placeholder="All Categories" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All Categories</SelectItem>
+        {splitIntoChunks(uniqueCategories, 10).map((chunk, chunkIndex) => (
+          <div key={chunkIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {chunk.map((category) => (
+              <SelectItem key={category} value={category.toLowerCase()}>
+                {category}
+              </SelectItem>
+            ))}
+          </div>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+          {/* Funding Type Filter */}
+          <div className="space-y-2">
+            <Label htmlFor="funding-type-filter">Funding Type</Label>
+            <Select 
+              value={fundingTypeFilter} 
+              onValueChange={setFundingTypeFilter}
+            >
+              <SelectTrigger id="funding-type-filter">
+                <SelectValue placeholder="All Funding Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Funding Types</SelectItem>
+                {uniqueFundingTypes.map(type => (
+                  <SelectItem key={type} value={type.toLowerCase()}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <Label htmlFor="status-filter">Status</Label>
+            <Select 
+              value={statusFilter} 
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger id="status-filter">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {uniqueStatuses.map(status => (
+                  <SelectItem key={status} value={status.toLowerCase()}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Main Content */}
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">{pageTitle}</h1>
+          
+          {!loading && allSchemes.length > 0 && (
+            <div className="text-sm text-gray-500">
+              <span className="font-medium text-emerald-600">{filteredCount}</span>
+              <span> of </span>
+              <span>{totalSchemes}</span>
+              <span> schemes </span>
+              <span className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full">{openSchemesCount} open</span>
             </div>
           )}
-        </>
-      )}
+        </div>
+        
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {renderSkeletons()}
+          </div>
+        ) : filteredSchemes.length === 0 ? (
+          <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="text-5xl mb-4">🔍</div>
+            <h3 className="text-xl font-medium text-gray-800 mb-2">No matching schemes found</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Try adjusting your filters or check back later for new funding opportunities.
+            </p>
+            <button 
+              onClick={handleResetFilters}
+              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+            >
+              View All Schemes
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Suspense fallback={renderSkeletons()}>
+              {filteredSchemes.map((scheme, idx) => (
+                <motion.div
+                  key={`${scheme.title}-${idx}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                >
+                  <SchemeCard scheme={scheme} />
+                </motion.div>
+              ))}
+            </Suspense>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
+
+
 
 export default Schemes;
