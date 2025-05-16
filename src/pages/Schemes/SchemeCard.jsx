@@ -96,20 +96,18 @@ const SchemeCard = memo(({ scheme }) => {
         alert('Please sign in to get notified.');
         return;
       }
-
-      const sheetURL = 'https://script.google.com/macros/s/AKfycbyuXbixSl4nOE_QAOOyKGZ0oJt3ghptZtcdMz8xyo2U5pytwNNU45fWrT5BCp7CJbN-ZA/exec';
+      const sheetURL = 'https://script.google.com/macros/s/AKfycbzHdk-A_587bl_RVj_US3T8iznpwp8DiJcteZDwnsfTA20RCSrm9LHTZTxX9HipeEQOvQ/exec';
       const body = `Name=${encodeURIComponent(user.name)}&Email=${encodeURIComponent(user.email)}&Program=${encodeURIComponent(scheme.title)}&Organization=${encodeURIComponent(scheme.organization)}`;
       console.log(body);
-      const response = await fetch(sheetURL, {
+      const response =  await fetch(sheetURL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
       });
-
+      console.log(response)
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
       alert('You will be notified when this scheme reopens.');
     } catch (err) {
       alert('Failed to register notification. Please try again.');

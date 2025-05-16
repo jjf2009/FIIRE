@@ -46,11 +46,13 @@ const SignInModal = memo(({ isOpen, onClose, onSignIn }) => {
     onClose();
 
     if (subscribe) {
+      const sheetURL = 'https://script.google.com/macros/s/AKfycbzHdk-A_587bl_RVj_US3T8iznpwp8DiJcteZDwnsfTA20RCSrm9LHTZTxX9HipeEQOvQ/exec';
+      const body = `Name=${encodeURIComponent(name)}&Email=${encodeURIComponent(email)}`;
       try {
-        await fetch('/api/subscribe', {
+        await fetch(sheetURL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email })
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
         });
       } catch (err) {
         setError('Failed to subscribe to the newsletter.');

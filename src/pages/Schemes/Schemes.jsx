@@ -156,20 +156,26 @@ const Schemes = () => {
   // Filter schemes based on current URL parameters
   const filteredSchemes = useMemo(() => {
     if (!allSchemes.length) return [];
-    
-    return allSchemes.filter(scheme => {
-      const matchesCategory = categoryParam === "all" || 
-      scheme.focusAreas.some(area => area.toLowerCase().includes(categoryParam.toLowerCase()));
-
-      const matchesFundingType = fundingTypeParam === "all" || 
-        scheme.fundingType?.toLowerCase().includes(fundingTypeParam.toLowerCase());
-      
-      const matchesStatus = statusParam === "all" || 
-        scheme.status?.toLowerCase().includes(statusParam.toLowerCase());
-      
+  
+    return allSchemes.filter((scheme) => {
+      const matchesCategory = 
+        categoryParam === "all" || 
+        scheme.focusAreas.some((area) => 
+          new RegExp(`\\b${categoryParam.toLowerCase()}`).test(area.toLowerCase())
+        );
+  
+      const matchesFundingType = 
+        fundingTypeParam === "all" || 
+        new RegExp(`\\b${fundingTypeParam.toLowerCase()}`).test(scheme.fundingType?.toLowerCase());
+  
+      const matchesStatus = 
+        statusParam === "all" || 
+        new RegExp(`\\b${statusParam.toLowerCase()}`).test(scheme.status?.toLowerCase());
+  
       return matchesCategory && matchesFundingType && matchesStatus;
     });
   }, [allSchemes, categoryParam, fundingTypeParam, statusParam]);
+  
 
   // Reset all filters
   const handleResetFilters = () => {
