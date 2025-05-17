@@ -251,7 +251,7 @@ const Schemes = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Category Filter */}
+       
   {/* Category Filter */}
   <div className="space-y-2">
     <Label htmlFor="category-filter">Category</Label>
