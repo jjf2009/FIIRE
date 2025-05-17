@@ -72,6 +72,11 @@ const SignInModal = memo(({ isOpen, onClose, onSignIn }) => {
     onClose();
   }, [name, email, onSignIn, onClose]);
 
+  const iframeStyle = {
+    border: '1px solid #EEE',
+    background: 'white'
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogTrigger asChild><div /></AlertDialogTrigger>
@@ -104,7 +109,15 @@ const SignInModal = memo(({ isOpen, onClose, onSignIn }) => {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">Please confirm your subscription below:</p>
-            <iframe src="https://techjeeva.substack.com/embed" width="480" height="320" style="border:1px solid #EEE; background:white;" frameborder="0" scrolling="no"></iframe>
+            <iframe
+              src="https://techjeeva.substack.com/embed"
+              width="100%"
+              height="320"
+              style={iframeStyle}
+              scrolling="no"
+              title="Substack Subscription"
+              className="border border-gray-300"
+            />
             <AlertDialogFooter>
               <Button onClick={handleFinalSubmit}>Submit</Button>
               <Button variant="outline" onClick={handleCancel}>Cancel</Button>
