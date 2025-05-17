@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-const ALERT_DELAY = 1 * 60 * 100; // 2 minutes
+const ALERT_DELAY = 1 * 60 * 1000; // 2 minutes
 
 // Newsletter Alert Component
 const NewsletterSubscribeAlert = ({ onClose }) => {
