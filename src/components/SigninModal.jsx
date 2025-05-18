@@ -95,10 +95,10 @@ const SignInModal = memo(({ isOpen, onClose, onSignIn }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextInput id="name" label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name" />
           <TextInput id="email" label="Email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" type="email" />
-          <div className="flex items-center space-x-2">
+          {/* <div className="flex items-center space-x-2">
             <input id="subscribe" type="checkbox" checked={subscribe} onChange={(e) => setSubscribe(e.target.checked)} className="h-4 w-4" />
             <Label htmlFor="subscribe" className="text-sm">Subscribe to newsletter</Label>
-          </div>
+          </div> */}
 
           {error && <div className="text-red-500">{error}</div>}
           <AlertDialogFooter>
