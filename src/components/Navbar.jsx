@@ -66,7 +66,7 @@ const Navbar = () => {
             <div className="bg-emerald-500 p-1.5 rounded-md shadow-sm">
               <Banknote className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-800">FundFind</span>
+            <span className="text-xl font-bold text-gray-800">TechJeeva</span>
           </Link>
         </div>
 
