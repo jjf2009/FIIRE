@@ -33,7 +33,7 @@ const Navbar = () => {
                   <div className="bg-emerald-500 p-1 rounded-md">
                     <Banknote className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-xl font-bold">FundFind</span>
+                  <span className="text-xl font-bold">TechJeeva</span>
                 </SheetTitle>
               </SheetHeader>
               <nav className="space-y-1">
